@@ -67,7 +67,7 @@
     ansible.builtin.reboot:
       reboot_timeout: 1200
 
-  - name: Pause for 5 minutes to build app cache
+  - name: Pause for 35 seconds just to let everything settle on the system
     ansible.builtin.pause:
       seconds: 35
 
