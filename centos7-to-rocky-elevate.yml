@@ -66,11 +66,11 @@
   - name: Reboot to complete upgrade
     ansible.builtin.reboot:
       reboot_timeout: 1200
-      post_reboot_delay: 30
 
-#  - name: Pause for 35 seconds just to let everything settle on the system
-#    ansible.builtin.pause:
-#      seconds: 35
+  - name: Pause for 5 minutes just to let everything settle on the system
+    ansible.builtin.pause:
+      # seconds: 35
+      minutes: 5
 
   - name: Grab current os version
     ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
