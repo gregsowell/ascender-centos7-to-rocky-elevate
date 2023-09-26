@@ -27,9 +27,6 @@
     ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
     register: ver_pre
 
-
-
-#  - name: Install elevate package
 #    ansible.builtin.shell: yum install -y http://repo.almalinux.org/elevate/elevate-release-latest-el$(rpm --eval %rhel).noarch.rpm
   - name: Install elevate
     ansible.builtin.yum:
@@ -48,18 +45,18 @@
     register: leapp_preupgrade
     failed_when: '"END OF REPORT" not in leapp_preupgrade.stdout'
     
-  - name: Build fix command list based on preupgrade file
+  - name: Build fix command list based on preupgrade file recommendations
     ansible.builtin.shell: cat /var/log/leapp/leapp-report.txt | grep -F [command] | awk '{$1= ""; print $0}'
     register: fix_commands
 
-  - name: Run standard fixes
+  - name: Run standard preupgrade fixes
     ansible.builtin.shell: "{{ item }}"
     loop: 
       - rmmod pata_acpi
       - echo PermitRootLogin yes | tee -a /etc/ssh/sshd_config
       - leapp answer --section remove_pam_pkcs11_module_check.confirm=True
 
-  - name: Run gathered fixes
+  - name: Run gathered preupgrade fixes
     ansible.builtin.shell: "{{ item }}"
     loop: "{{ fix_commands.stdout_lines }}"
 
@@ -76,4 +73,4 @@
 
   - name: Display before and after versions
     ansible.builtin.debug:
-      msg: "Version before {{ ver_pre | regex_replace('PRETTY_NAME=','')}}.  Version after {{ ver_post | regex_replace('PRETTY_NAME=','')}}."
+      msg: "Version before {{ ver_pre.stdout | regex_replace('PRETTY_NAME=','')}}.  Version after {{ ver_post.stdout | regex_replace('PRETTY_NAME=','')}}."
