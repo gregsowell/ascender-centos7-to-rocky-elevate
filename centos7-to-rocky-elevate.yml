@@ -23,8 +23,12 @@
       reboot_timeout: 3600
     when: cent_update.changed
 
-  - name: Install elevate package
-    ansible.builtin.shell: yum install -y http://repo.almalinux.org/elevate/elevate-release-latest-el$(rpm --eval %rhel).noarch.rpm
+#  - name: Install elevate package
+#    ansible.builtin.shell: yum install -y http://repo.almalinux.org/elevate/elevate-release-latest-el$(rpm --eval %rhel).noarch.rpm
+  - name: Install elevate
+    ansible.builtin.yum:
+      name: http://repo.almalinux.org/elevate/elevate-release-latest-el7.noarch.rpm
+      state: latest
 
   - name: Install leap packages for general and rocky
     ansible.builtin.yum:
