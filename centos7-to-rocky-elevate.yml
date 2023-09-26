@@ -65,11 +65,11 @@
 
   - name: Reboot to complete upgrade
     ansible.builtin.reboot:
-      connecton_timeout: 5
       reboot_timeout: 1200
-      pre_reboot_delay: 0
-      post_reboot_delay: 30
 
+  - name: Reset ssh connection
+    ansible.builtin.meta: reset_connection
+  
   - name: Pause for 2 minutes just to let everything settle on the system
     ansible.builtin.pause:
       # seconds: 35
