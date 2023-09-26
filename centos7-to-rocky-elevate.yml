@@ -36,7 +36,8 @@
   - name: run the leapp preupgrade
     ansible.builtin.shell: leapp preupgrade
     register: leapp_preupgrade
-
+    failed_when: '"END OF REPORT" not in leapp_preupgrade.stdout'
+    
   - name: Build fix command list based on preupgrade file
     ansible.builtin.shell: cat /var/log/leapp/leapp-report.txt | grep -F [command] | awk '{$1= ""; print $0}'
     register: fix_commands
