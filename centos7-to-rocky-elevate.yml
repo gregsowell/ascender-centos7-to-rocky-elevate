@@ -23,6 +23,12 @@
       reboot_timeout: 3600
     when: cent_update.changed
 
+  - name: Grab current os version
+    ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
+    register: ver_pre
+
+
+
 #  - name: Install elevate package
 #    ansible.builtin.shell: yum install -y http://repo.almalinux.org/elevate/elevate-release-latest-el$(rpm --eval %rhel).noarch.rpm
   - name: Install elevate
@@ -63,3 +69,11 @@
   - name: Reboot to complete upgrade
     ansible.builtin.reboot:
       reboot_timeout: 3600
+
+  - name: Grab current os version
+    ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
+    register: ver_post
+
+  - name: Display before and after versions
+    ansible.builtin.debug:
+      msg: "Version before {{ ver_pre | regex_replace('PRETTY_NAME=','')}}.  Version after {{ ver_post | regex_replace('PRETTY_NAME=','')}}."
