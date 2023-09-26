@@ -86,7 +86,8 @@
   gather_facts: false
   become: true
   vars:
-  
+    ansible_python_interpreter: /usr/bin/python3
+    
   tasks:
   - name: Grab current os version
     ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
