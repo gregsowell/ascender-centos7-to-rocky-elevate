@@ -1,0 +1,26 @@
+---
+- name: Use elevate to migrate a centos7 host to rocky8
+  hosts: all
+  gather_facts: false
+  become: true
+  vars:
+    vcenter_hostname: 10.1.2.3
+    vcenter_username: "{{ gen1_user }}"
+    vcenter_password: "{{ gen1_pword }}"
+    datacenter_name: MNS
+    
+  tasks:
+  - name: create VM snapshot
+    community.vmware.vmware_guest_snapshot:
+      validate_certs: false
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "/Greg/ciq/"
+      name: "{{ inventory_hostname }}"
+      state: present
+      snapshot_name: snap-update
+      description: snapshot for updates
+      memory_dump: true
+    delegate_to: localhost
