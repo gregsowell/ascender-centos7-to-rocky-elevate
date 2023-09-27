@@ -54,7 +54,7 @@
     loop: 
       - rmmod pata_acpi
       - echo PermitRootLogin yes | tee -a /etc/ssh/sshd_config
-      - leapp answer --section remove_pam_pkcs11_module_check.confirm=True
+#      - leapp answer --section remove_pam_pkcs11_module_check.confirm=True
 
   - name: Run gathered preupgrade fixes
     ansible.builtin.shell: "{{ item }}"
