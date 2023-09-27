@@ -1,0 +1,76 @@
+---
+- name: VMWare snapshot control
+  hosts: all
+  gather_facts: false
+  
+  vars:
+    vcenter_hostname: 10.1.2.3
+    vcenter_username: "{{ gen1_user }}"
+    vcenter_password: "{{ gen1_pword }}"
+    datacenter_name: MNS
+
+    #Set snapshot action below to perform one of the actions
+    # create, remove, restore
+    snapshot_action: none
+    
+  tasks:
+  - name: Create snapshot
+    when: snapshot_action == "create"
+    community.vmware.vmware_guest_snapshot:
+      validate_certs: false
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "/Greg/ciq/"
+      name: "{{ inventory_hostname }}"
+      state: present
+      snapshot_name: snap-update
+      description: snapshot for updates
+      memory_dump: true
+    delegate_to: localhost
+
+  - name: Remove snapshot
+    when: snapshot_action == "remove"
+    community.vmware.vmware_guest_snapshot:
+      validate_certs: false
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "/Greg/ciq/"
+      name: "{{ inventory_hostname }}"
+      state: absent
+      snapshot_name: snap-update
+    delegate_to: localhost
+    ignore_errors: true
+
+  - name: Restore block
+    when: snapshot_action == "restore"
+    block:
+    - name: Rollback the snapshot
+      community.vmware.vmware_guest_snapshot:
+        validate_certs: false
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ datacenter_name }}"
+        folder: "/Greg/ciq/"
+        name: "{{ inventory_hostname }}"
+        state: revert
+        snapshot_name: snap-update
+      delegate_to: localhost
+
+    - name: Completed processing, delete snapshot
+      community.vmware.vmware_guest_snapshot:
+        validate_certs: false
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ datacenter_name }}"
+        folder: "/Greg/ciq/"
+        name: "{{ inventory_hostname }}"
+        state: absent
+        snapshot_name: snap-update
+      delegate_to: localhost
+      ignore_errors: true
