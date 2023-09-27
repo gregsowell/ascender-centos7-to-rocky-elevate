@@ -27,12 +27,6 @@
     ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
     register: ver_pre
 
-#  - name: set pre stat
-#    ansible.builtin.set_stats:
-#      data: 
-#        ver_pre_stat: "{{ ver_pre.stdout | regex_replace('PRETTY_NAME=','')}}"
-#      per_host: yes
-    
 #    ansible.builtin.shell: yum install -y http://repo.almalinux.org/elevate/elevate-release-latest-el$(rpm --eval %rhel).noarch.rpm
   - name: Install elevate
     ansible.builtin.yum:
@@ -73,26 +67,10 @@
     ansible.builtin.reboot:
       reboot_timeout: 1200
 
-#  - name: Reset ssh connection
-#    ansible.builtin.meta: reset_connection
-  
-#  - name: Pause for 2 minutes just to let everything settle on the system
-#    ansible.builtin.pause:
-#      # seconds: 35
-#      minutes: 2
-
-#- name: Verify new OS
-#  hosts: all
-#  gather_facts: false
-#  become: true
-#  vars:
-#    ansible_python_interpreter: /usr/bin/python3
-
   - name: set new python interpreter
     ansible.builtin.set_fact:
       ansible_python_interpreter: /usr/bin/python3
     
-#  tasks:
   - name: Grab current os version
     ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
     register: ver_post
@@ -100,4 +78,3 @@
   - name: Display before and after versions
     ansible.builtin.debug:
       msg: "Version before {{ ver_pre.stdout | regex_replace('PRETTY_NAME=','')}}.  Version after {{ ver_post.stdout | regex_replace('PRETTY_NAME=','')}}."
-#      msg: "Version before {{ ver_pre_stat }}.  Version after {{ ver_post.stdout | regex_replace('PRETTY_NAME=','')}}."
