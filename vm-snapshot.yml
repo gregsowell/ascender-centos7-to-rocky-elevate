@@ -2,7 +2,7 @@
 - name: Use elevate to migrate a centos7 host to rocky8
   hosts: all
   gather_facts: false
-  become: true
+  
   vars:
     vcenter_hostname: 10.1.2.3
     vcenter_username: "{{ gen1_user }}"
