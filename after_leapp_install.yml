@@ -1,0 +1,17 @@
+---
+# Everything you need to do before starting the upgrade
+# to customize repository or dnf for example
+
+# Check if a custom tasks file exist
+- name: "Does {{ playbook_dir }}/custom_tasks/after_leap_install_custom_tasks.yml file exist ?"
+  stat:
+    path: "{{ playbook_dir }}/custom_tasks/after_leap_install_custom_tasks.yml"
+  register: after_leap_install
+  delegate_to: localhost
+
+# Play this file's tasks if it exists
+- name: "{{ playbook_dir }}/custom_tasks/after_leap_install_custom_tasks.yml exists"
+  include_tasks: "{{ playbook_dir }}/custom_tasks/after_leap_install_custom_tasks.yml"
+  when:
+    - after_leap_install is defined
+    - after_leap_install.stat.exists

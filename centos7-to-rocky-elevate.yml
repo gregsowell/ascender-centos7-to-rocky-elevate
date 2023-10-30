@@ -45,6 +45,10 @@
           - leapp-data-rocky
         state: latest
 
+    # Everything you need to do before starting the upgrade
+    - name: Manage custom tasks if existing
+      include_tasks: after_leapp_install.yml
+
     - name: run the leapp preupgrade
       ansible.builtin.shell: leapp preupgrade
       register: leapp_preupgrade
