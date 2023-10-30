@@ -4,77 +4,90 @@
   gather_facts: false
   become: true
   vars:
-  
+
   tasks:
-  - name: quick check if all hosts was specified with no limit
-    ansible.builtin.assert:
-      that: ansible_play_hosts_all|length < groups.all|length
-      fail_msg: '[ERROR] All hosts not allowed.'
-    run_once: true
 
-  - name: Update current centos7 packages
-    ansible.builtin.yum: 
-      name: '*'
-      state: latest
-    register: cent_update
+    - name: quick check if all hosts was specified with no limit
+      ansible.builtin.assert:
+        that: ansible_play_hosts_all|length < groups.all|length
+        fail_msg: '[ERROR] All hosts not allowed.'
+      run_once: true
 
-  - name: Reboot if updates were made
-    ansible.builtin.reboot:
-      reboot_timeout: 3600
-    when: cent_update.changed
+    - name: Update current centos7 packages
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+      register: cent_update
 
-  - name: Grab current os version
-    ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
-    register: ver_pre
+    - name: Reboot if updates were made
+      ansible.builtin.reboot:
+        reboot_timeout: 3600
+      when: cent_update.changed
 
-#    ansible.builtin.shell: yum install -y http://repo.almalinux.org/elevate/elevate-release-latest-el$(rpm --eval %rhel).noarch.rpm
-  - name: Install elevate
-    ansible.builtin.yum:
-      name: http://repo.almalinux.org/elevate/elevate-release-latest-el7.noarch.rpm
-      state: latest
+    - name: Grab current os version
+      ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
+      register: ver_pre
 
-  - name: Install leap packages for general and rocky
-    ansible.builtin.yum:
-      name:
-        - leapp-upgrade
-        - leapp-data-rocky
-      state: latest
+    # Everything you need to do before starting the upgrade
+    - name: Manage custom tasks if existing
+      include_tasks: before_upgrade.yml
 
-  - name: run the leapp preupgrade
-    ansible.builtin.shell: leapp preupgrade
-    register: leapp_preupgrade
-    failed_when: '"END OF REPORT" not in leapp_preupgrade.stdout'
-    
-  - name: Build fix command list based on preupgrade file recommendations
-    ansible.builtin.shell: cat /var/log/leapp/leapp-report.txt | grep -F [command] | awk '{$1= ""; print $0}'
-    register: fix_commands
+    # ansible.builtin.shell: yum install -y http://repo.almalinux.org/elevate/elevate-release-latest-el$(rpm --eval %rhel).noarch.rpm
+    - name: Install elevate
+      ansible.builtin.yum:
+        name: http://repo.almalinux.org/elevate/elevate-release-latest-el7.noarch.rpm
+        state: latest
 
-  - name: Run standard preupgrade fixes
-    ansible.builtin.shell: "{{ item }}"
-    loop: 
-      - rmmod pata_acpi
-      - echo PermitRootLogin yes | tee -a /etc/ssh/sshd_config
-#      - leapp answer --section remove_pam_pkcs11_module_check.confirm=True
+    - name: Install leap packages for general and rocky
+      ansible.builtin.yum:
+        name:
+          - leapp-upgrade
+          - leapp-data-rocky
+        state: latest
 
-  - name: Run gathered preupgrade fixes
-    ansible.builtin.shell: "{{ item }}"
-    loop: "{{ fix_commands.stdout_lines }}"
+    # Everything you need to do before starting the upgrade
+    - name: Manage custom tasks if existing
+      include_tasks: after_leapp_install.yml
 
-  - name: Run the leapp upgrade
-    ansible.builtin.shell: leapp upgrade
+    - name: run the leapp preupgrade
+      ansible.builtin.shell: leapp preupgrade
+      register: leapp_preupgrade
+      failed_when: '"END OF REPORT" not in leapp_preupgrade.stdout'
 
-  - name: Reboot to complete upgrade
-    ansible.builtin.reboot:
-      reboot_timeout: 1200
+    - name: Build fix command list based on preupgrade file recommendations
+      ansible.builtin.shell: cat /var/log/leapp/leapp-report.txt | grep -F [command] | awk '{$1= ""; print $0}'
+      register: fix_commands
 
-  - name: set new python interpreter
-    ansible.builtin.set_fact:
-      ansible_python_interpreter: /usr/bin/python3
-    
-  - name: Grab current os version
-    ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
-    register: ver_post
+    - name: Run standard preupgrade fixes
+      ansible.builtin.shell: "{{ item }}"
+      loop:
+        - rmmod pata_acpi
+        - echo PermitRootLogin yes | tee -a /etc/ssh/sshd_config
+        # - leapp answer --section remove_pam_pkcs11_module_check.confirm=True
 
-  - name: Display before and after versions
-    ansible.builtin.debug:
-      msg: "Version before {{ ver_pre.stdout | regex_replace('PRETTY_NAME=','')}}.  Version after {{ ver_post.stdout | regex_replace('PRETTY_NAME=','')}}."
+    - name: Run gathered preupgrade fixes
+      ansible.builtin.shell: "{{ item }}"
+      loop: "{{ fix_commands.stdout_lines }}"
+
+    - name: Run the leapp upgrade
+      ansible.builtin.shell: leapp upgrade
+
+    - name: Reboot to complete upgrade
+      ansible.builtin.reboot:
+        reboot_timeout: 1200
+
+    - name: set new python interpreter
+      ansible.builtin.set_fact:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Grab current os version
+      ansible.builtin.shell: cat /etc/os-release | grep PRETTY_NAME
+      register: ver_post
+
+    - name: Display before and after versions
+      ansible.builtin.debug:
+        msg: "Version before {{ ver_pre.stdout | regex_replace('PRETTY_NAME=','')}}.  Version after {{ ver_post.stdout | regex_replace('PRETTY_NAME=','')}}."
+
+    # Everything you need to do before starting the upgrade
+    - name: Manage custom tasks if existing
+      include_tasks: after_upgrade.yml
